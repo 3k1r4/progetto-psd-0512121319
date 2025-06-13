@@ -244,12 +244,14 @@ int deleteTask(Planner p);
 
 ---
 
+#### Per compilare ed eseguire usare:
 ```
-Per compilare ed eseguire usare:
-
 - clean : elimina tutti i file oggetto e l'eseguibile
 - run : compila e genera l'eseguibile
+- link_test : compila e genera l'eseguibile per testare il progetto 
 - recompile : esegue clean e poi run
+- recompile_test : esegue clean e poi link_test
 
 l' eseguibile è denominato: progetto.exe.
+l' eseguibile per il test del progetto è denominato: test_progetto.exe 
 ```
