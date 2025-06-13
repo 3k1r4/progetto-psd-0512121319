@@ -243,6 +243,20 @@ int deleteTask(Planner p);
 - Memory release, user input.
 
 ---
+### 4. Razionale dei Casi di Test
+
+I casi di test sono progettati per verificare le funzionalità critiche:
+
+- `Inserimento attività:` verifica che l’input venga acquisito correttamente e che i task siano inseriti nella struttura corretta.
+
+- `Avanzamento e completamento:` verifica l’aggiornamento del progresso, il passaggio da inProgress a completed, e la gestione delle scadenze.
+
+- `Gestione scadenze:` test automatico che sposta le attività scadute nella lista expired.
+
+- `Generazione report settimanale:` verifica che il file report.txt venga aggiornato correttamente e mostri informazioni coerenti (attività completate, in corso e scadute).
+
+- `Ricerca nel report:` verifica che, data una data di riferimento, il sistema trovi e visualizzi correttamente il report corrispondente.
+
 
 #### Per compilare ed eseguire usare:
 ```
