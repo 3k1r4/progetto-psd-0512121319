@@ -385,7 +385,7 @@ Task getByPQTitle(pQueue q, char *title) {
  * - Writes to a file.
  * - Opens and closes files.
  */
-int saveOnFileQueue(pQueue q, char *filename) {
+int saveOnFileQueue(pQueue q, const char *filename) {
     if (q == NULL || filename == NULL) {
         printf("\nError: queue or filename is NULL\n");
         return 0;

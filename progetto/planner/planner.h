@@ -3,6 +3,9 @@
 
 // Forward declaration of the planner struct
 typedef struct planner *Planner;
+#ifndef DEFAULT_TXT_FOLDER
+#define DEFAULT_TXT_FOLDER "Data"
+#endif
 
 //planner prototypes
 Planner openPlanner(void);

@@ -4,7 +4,7 @@
 
 int main(void) {
     //for testing pourpose use getCurrentDateML() to set manualy the date
-    today = getCurrentDateAT();
+    today = getCurrentDateML();
     Planner planner = openPlanner();
     if (planner == NULL) {
         printf("Error.\n");

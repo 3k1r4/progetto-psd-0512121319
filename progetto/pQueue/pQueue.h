@@ -17,7 +17,7 @@ int enqueue(pQueue, Task);
 
 void printQueue(pQueue);
 pQueue scanFileQueue(pQueue, FILE *);
-int saveOnFileQueue(pQueue, char *);
+int saveOnFileQueue(pQueue, const char *);
 
 int getSize(pQueue);
 Task getByIndex(pQueue, int);

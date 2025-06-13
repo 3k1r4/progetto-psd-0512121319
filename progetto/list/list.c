@@ -311,7 +311,7 @@ Task popL(list *l, Task target) {
  * Side Effects:
  * - File I/O operations.
  */
-int saveOnFileList(list l, char *filename) {
+int saveOnFileList(list l, const char *filename) {
     if (l == NULL || filename == NULL) {
         printf("\nError: list or filename is NULL\n");
         return 0;

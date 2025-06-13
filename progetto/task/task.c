@@ -38,7 +38,7 @@ struct task {
  * - Allocates memory dynamically.
  */
 Task newTask() {
-    char pTxt[6];
+    char pTxt[10];
     Task new = malloc(sizeof(struct task));
 
     clearBuffer();

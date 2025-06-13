@@ -12,6 +12,35 @@ struct planner {
     list completed;
     list expired;
 };
+const char **paths;
+
+const char **getFilePath(){
+    const char *folder = DEFAULT_TXT_FOLDER;
+    printf("DEFAULT_TXT_FOLDER e': %s\n", DEFAULT_TXT_FOLDER);
+
+
+    if (strcmp(folder, "Data") == 0){
+        static const char *data_files[] = {
+            "./Data/progress.txt",
+            "./Data/completed.txt",
+            "./Data/expired.txt",
+            "./Data/report.txt"
+        };
+        return data_files;
+    }
+
+    if (strcmp(folder, "test") == 0){
+        static const char *data_files[] = {
+            "./test/output/progress.txt",
+            "./test/output/completed.txt",
+            "./test/output/expired.txt",
+            "./test/output/report.txt"
+        };
+        return data_files;
+    }
+
+    return NULL;
+}
 
 /* checkExpired
  * Syntax Specification:
@@ -76,7 +105,7 @@ bool checkExpired(Planner p) {
  * - Reads data from Planner and outputs messages in case of errors.
  */
 void generateWeeklyReport(Planner p, char *monday) {
-    FILE *reportFile = fopen("./Data/report.txt", "a"); // Apertura in modalità append per non sovrascrivere il contenuto
+    FILE *reportFile = fopen(paths[3], "a"); // Apertura in modalità append per non sovrascrivere il contenuto
     int counter = 0;
 
     if (reportFile == NULL) {
@@ -110,17 +139,16 @@ void generateWeeklyReport(Planner p, char *monday) {
             Task t = getByIndex(p->inProgress, i);
             if (compareDates(getDeadline(t), today) == 0) {
             fprintf(reportFile, "- %s (%s) ! Due today !\n", getTitle(t), getCourse(t));
-            return;
+            } else {
+                fprintf(reportFile, "- %s (%s) Deadline: ", getTitle(t), getCourse(t));
+                fprintDate(reportFile, getDeadline(t));
+                fprintf(reportFile, "\n");
             }
-
-            fprintf(reportFile, "- %s (%s) Deadline: ", getTitle(t), getCourse(t));
-            fprintDate(reportFile, getDeadline(t));
-            fprintf(reportFile, "\n");
         }
         fprintf(reportFile, "* There are %s in progress task", counter ? intToString(counter) : "no" );
-    }
+    }   
 
-    if (p->expired != NULL) {
+    if (p->expired != NULL) { 
         counter = 0;
         fprintf(reportFile, "\n\n+ Expired tasks:\n");
         list temp = p->expired;
@@ -142,12 +170,77 @@ void generateWeeklyReport(Planner p, char *monday) {
     fclose(reportFile); // Chiude il file dopo aver scritto il report
 }
 
+/* searchReport
+ * Syntax Specification:
+ * bool searchReport(const char *startDate);
+ *
+ * Semantic Specification:
+ * Searches for and displays a weekly report block in the report file that starts with a given date.
+ *
+ * Preconditions:
+ * - 'startDate' must be a valid string representing a date in the format "ddmmyyyy".
+ *
+ * Postconditions:
+ * - Prints the matched report block to the screen.
+ * - Returns true if a report is found, false otherwise.
+ *
+ * Side Effects:
+ * - Reads from file.
+ * - Outputs to the terminal.
+ */
+bool searchReport(const char *startDate, bool print) {
+    FILE *file = fopen(paths[3], "r");
+    if (file == NULL) {
+        printf("\nError: Unable to open file.\n");
+        return false;
+    }
+
+    char line[512];
+    bool found = false;
+    bool insideBlock = false;
+
+    while (fgets(line, sizeof(line), file)) {
+        // Rimuove newline
+        line[strcspn(line, "\n")] = 0;
+
+        // Cerca una data intermedia
+        if (!insideBlock && strcmp(line, startDate) == 0) {
+            found = true;
+            if (print){
+                clearScreen();
+                printf("\nReport generated on date: ");
+                printDate(line);
+                printf("\n");
+            }
+            insideBlock = true; // Ora iniziamo a cercare il blocco di testo
+            continue;
+        }
+
+        // Se abbiamo trovato la data, cerchiamo il primo $
+        if (insideBlock && print) {
+            if (line[0] == '$') {
+                // Se troviamo il primo $, iniziamo a stampare il contenuto
+                while (fgets(line, sizeof(line), file)) {
+                    line[strcspn(line, "\n")] = 0;
+                    if (line[0] == '$') break; // Stop al secondo $
+                    printf("%s\n", line);
+                }
+                break; // Fermiamo la ricerca dopo aver stampato il blocco
+            }
+        }
+    }
+
+    fclose(file);
+    return found;
+}
+
 Planner openPlanner() {
     Planner p = malloc(sizeof(struct planner));
     if (p != NULL) {
         p->inProgress = newPQ();
         p->completed = newList();
         p->expired = newList();
+        paths = getFilePath();
 
         if (p->inProgress == NULL || p->completed != NULL || p->expired != NULL) {
             printf("Memory allocation error for planner internal structures.\n");
@@ -155,11 +248,11 @@ Planner openPlanner() {
             return NULL;
         }
 
-        scanFileQueue(p->inProgress, fopen("./Data/progress.txt", "r"));
-        p->completed = scanFileList(p->completed, fopen("./Data/completed.txt", "r"));
-        p->expired = scanFileList(p->expired, fopen("./Data/expired.txt", "r"));
+        scanFileQueue(p->inProgress, fopen(*paths, "r"));
+        p->completed = scanFileList(p->completed, fopen(paths[1], "r"));
+        p->expired = scanFileList(p->expired, fopen(paths[2], "r"));
         checkExpired(p);
-        if (compareDates(today, getPreviousMonday()) == 0){
+        if (compareDates(today, getPreviousMonday()) == 0 && !searchReport(today, false)){
             char *monday = getLastWeekDate();
             generateWeeklyReport(p, monday);
         }
@@ -176,14 +269,15 @@ int closePlanner(Planner p){
         return 0;
     }
 
-    saveOnFileQueue(p->inProgress, "./Data/progress.txt");
-    saveOnFileList(p->completed, "./Data/completed.txt");
-    saveOnFileList(p->expired, "./Data/expired.txt");
+    saveOnFileQueue(p->inProgress, *paths);
+    saveOnFileList(p->completed, paths[1]);
+    saveOnFileList(p->expired, paths[2]);
 
     freePQ(p->inProgress);
     freeList(&(p->completed));
     freeList(&(p->expired));
     free(p);
+    clearScreen();
     printf("\n--- Study session ended ---\n");
 }
 
@@ -324,7 +418,7 @@ int insert(Planner p) {
 Planner modifyTask(Planner p) {
     if (p == NULL) {
         printf("\nError: planner does not exist.\n");
-        return 0;
+        return NULL;
     }
 
     char title[21], ans;
@@ -492,76 +586,14 @@ int showTaskProgress (Planner p){
     return 1;
 }
 
-/* searchReport
- * Syntax Specification:
- * bool searchReport(const char *startDate);
- *
- * Semantic Specification:
- * Searches for and displays a weekly report block in the report file that starts with a given date.
- *
- * Preconditions:
- * - 'startDate' must be a valid string representing a date in the format "ddmmyyyy".
- *
- * Postconditions:
- * - Prints the matched report block to the screen.
- * - Returns true if a report is found, false otherwise.
- *
- * Side Effects:
- * - Reads from file.
- * - Outputs to the terminal.
- */
-bool searchReport(const char *startDate) {
-    FILE *file = fopen("./Data/report.txt", "r");
-    if (file == NULL) {
-        printf("\nError: Unable to open file.\n");
-        return false;
-    }
-
-    char line[512];
-    bool found = false;
-    bool insideBlock = false;
-
-    while (fgets(line, sizeof(line), file)) {
-        // Rimuove newline
-        line[strcspn(line, "\n")] = 0;
-
-        // Cerca una data intermedia
-        if (!insideBlock && strcmp(line, startDate) == 0) {
-            found = true;
-            clearScreen();
-            printf("\nReport generated on date: ");
-            printDate(line);
-            printf("\n");
-            insideBlock = true; // Ora iniziamo a cercare il blocco di testo
-            continue;
-        }
-
-        // Se abbiamo trovato la data, cerchiamo il primo $
-        if (insideBlock) {
-            if (line[0] == '$') {
-                // Se troviamo il primo $, iniziamo a stampare il contenuto
-                while (fgets(line, sizeof(line), file)) {
-                    line[strcspn(line, "\n")] = 0;
-                    if (line[0] == '$') break; // Stop al secondo $
-                    printf("%s\n", line);
-                }
-                break; // Fermiamo la ricerca dopo aver stampato il blocco
-            }
-        }
-    }
-
-    fclose(file);
-    return found;
-}
-
 int weeklyReport (Planner p){
-    if (p == NULL || (p->inProgress == NULL && p->completed == NULL && p->expired == NULL)) {
+    if (p == NULL ) {
         printf("\nError: Report not available.\n");
         return 0;
     }
 
-    if (!searchReport(getPreviousMonday())) {
-        printf("\nError: Report not available.");
+    if (!searchReport(getPreviousMonday(), true)) {
+        printf("\nError: Report not available. not found.");
     }
 
     printf("\n\nPress x to continue...\n");

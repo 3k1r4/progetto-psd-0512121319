@@ -1,0 +1,16 @@
+12062025
+completata
+n
+7
+100
+0
+priorita bassa
+n
+7
+50
+0
+titolo
+n
+1
+in corso
+0

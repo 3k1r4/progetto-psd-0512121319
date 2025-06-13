@@ -18,7 +18,7 @@ typedef struct node *list;
  list rmvList( list l, char *c);
  
  void printList(list);
- int saveOnFileList(list l, char *c);
+ int saveOnFileList(list l, const char *c);
  list scanFileList(list l, FILE *f);
  
  
