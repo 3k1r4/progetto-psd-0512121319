@@ -16,8 +16,6 @@ const char **paths;
 
 const char **getFilePath(){
     const char *folder = DEFAULT_TXT_FOLDER;
-    printf("DEFAULT_TXT_FOLDER e': %s\n", DEFAULT_TXT_FOLDER);
-
 
     if (strcmp(folder, "Data") == 0){
         static const char *data_files[] = {

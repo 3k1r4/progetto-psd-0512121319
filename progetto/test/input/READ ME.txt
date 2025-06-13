@@ -1,0 +1,3 @@
+per poter effettuare il testing bisogna immattere manualmente i valori di input presenti nei file.
+causa: errore durante l'uso di freopen.
+mi scuso per il problema.

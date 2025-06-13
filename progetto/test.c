@@ -5,27 +5,38 @@
 
 int insertTest();
 int modifyTest();
-int progressTest();
 int reportTest();
+
+bool compare_files(const char *file1, const char *file2);
 
 int main(void){
 
-     // Reindirizza l'input da insert.txt
-    //if (freopen("./test/input/insert.txt", "r", stdin) == NULL) {
-    //    perror("Errore nell'apertura di insert.txt");
-    //    exit(EXIT_FAILURE);
-    //}
+    if (!insertTest() || 
+        !compare_files("./test/oracle/progress.txt", "./test/output/progress.txt")) {
+            printf("\nInsert error.");
+            return 1;
+        }
 
-    //if (!insertTest()) printf("Insert error.");
-    //if (!modifyTest()) printf("\nModify error.");
-    //if (!progressTest()) printf("\nShow progress error.");
-    //if (!reportTest()) printf("\nWeekly report error.");
+    if (!modifyTest() || 
+        !compare_files("./test/oracle/progress.txt", "./test/output/progress.txt") ||
+        !compare_files("./test/oracle/completed.txt", "./test/output/completed.txt") ||     
+        !compare_files("./test/oracle/expired.txt", "./test/output/expired.txt")) {
+            printf("\nModify error.");
+            return 1;
+        }
+    
+    if (!reportTest() ||
+        !compare_files("./test/oracle/report.txt", "./test/output/report.txt")) {
+            printf("\nWeekly report error.");
+            return 1;
+        }
 
+    printf("\nAll the tests gone well.");
     return 0;
 }
 
 int insertTest(){
-    freopen("./test/input/insert.txt", "r", stdin);
+    //freopen("./test/input/insert.txt", "r", stdin);
     Planner planner;
 
     for (int i = 0; i < 4; i ++){
@@ -41,7 +52,7 @@ int insertTest(){
 }
 
 int modifyTest(){
-    freopen("./test/input/modify.txt", "r", stdin);
+    //freopen("./test/input/modify.txt", "r", stdin);
     today = getCurrentDateML();
     Planner planner;
     if ((planner = openPlanner()) == NULL) return 0;
@@ -52,19 +63,8 @@ int modifyTest(){
     return 1;
 }
 
-int progressTest(){
-    freopen("./test/input/progress.txt", "r", stdin);
-    today = getCurrentDateML();
-    Planner planner;
-    if ((planner = openPlanner()) == NULL) return 0;
-
-    if (!showTaskProgress(planner)) return 0;
-    
-    return 1;
-}
-
 int reportTest(){
-    freopen("./test/input/report.txt", "r", stdin);
+    //freopen("./test/input/report.txt", "r", stdin);
     today = getCurrentDateML();
     Planner planner;
     if ((planner = openPlanner()) == NULL) return 0;
@@ -73,4 +73,32 @@ int reportTest(){
 
     closePlanner(planner);
     return 1;
+}
+
+#include <stdio.h>
+#include <stdbool.h>
+
+bool compare_files(const char *file1, const char *file2) {
+    FILE *fp1 = fopen(file1, "r");
+    FILE *fp2 = fopen(file2, "r");
+
+    if (fp1 == NULL || fp2 == NULL) {
+        return false;
+    }
+
+    int ch1, ch2;
+    while ((ch1 = fgetc(fp1)) != EOF && (ch2 = fgetc(fp2)) != EOF) {
+        if (ch1 != ch2) {
+            fclose(fp1);
+            fclose(fp2);
+            return false;
+        }
+    }
+
+    // Controlla se entrambi i file hanno raggiunto EOF
+    bool result = (ch1 == EOF && ch2 == EOF);
+
+    fclose(fp1);
+    fclose(fp2);
+    return result;
 }
